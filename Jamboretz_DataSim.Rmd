@@ -1,0 +1,699 @@
+```{r include = FALSE, message = FALSE}
+#install.packages(stats)
+library(stats)
+#install.packages("rmarkdown")
+library("rmarkdown")
+set.seed(1)
+```
+---
+title: "Data Simulation of Blood Based Markers"
+output: html_document
+---
+
+Kate Jamboretz, University of San Francisco Professional Master's of Biotechnology '17
+
+Background
+
+- Assignment: Data Simulation Project
+
+- Course: Projects in Statistical Computing for Biomedical Data Analytics
+
+- Instructor: Dr. Patricia Francis-Lyon
+
+E Schwarz, PC Guest, J Steiner, B Bogerts, S Bahn. Identification of blood-based molecular signatures for prediction of response and relapse in schizophrenia patients [Translational Psychiatry (2012) 2, e82; doi:10.1038/tp.2012.3](http://www.nature.com/tp/journal/v2/n2/full/tp20123a.html)
+
+  This data simulation focuses on a portion of the work Schwarz et al. performed in the above paper, focusing on predictors until time to relapse for Schizophrenia patients and the variables for which we have the most information. The paper itself had a broader scope with four main goals, as quoted from the paper abstract:
+  
+  
+  "
+  
+   1) to identifiy molecules associated with symptom severity in antipsychotic naive and unmedicated patients
+  
+   2) to determine biomarker signatures that could predict response over a 6-week treatment period
+  
+   3) to identify molecular panels that could predict the time to relapse in a cross-sectional population of patients in remission and
+  
+   4) to investigate how the biological relapse signature changed throughout the treatment course
+  
+    "
+    
+This simulation focuses on data associated with the prediction of short or long term relapse in a smaller group of eighteen patients including several blood markers and clinical variables. 
+
+The [HumanMap multiplexed immunoassay](https://myriadrbm.com/products-services/humanmap-services/humanmap/) was used to measure the concentration of blood protein levels at several time points as depicted in [Figure 1](http://www.nature.com/tp/journal/v2/n2/fig_tab/tp20123f1.html#figure-title).
+
+- T0 = Time of admission to the clinic.
+
+- T6 = After 6 weeks of monitored treatment at the clinic to ensure adherance to medication regimine
+
+- TR = a variable time point, last clinic visit before time of relapse
+
+- relapse = a variable time point, taken when relapse occurs
+
+While at T0 and T6 there were many more patients (N = 77), far fewer were included in the time to relapse analysis (N = 18).
+
+The clinical variables, shown in [Table 1](http://www.nature.com/tp/journal/v2/n2/fig_tab/tp20123t1.html#figure-title), were reported with the mean and standard deviation or exact values and therefore are straightforward to simulate with normal distributions or probabilities.
+
+```{r include = FALSE}
+######################## Generate Data ######################################
+
+
+# ********************************* List Clinical Variables ***************************** #
+
+# Gender (M/F) *
+# Age (years) *
+# BMI (kg m^(-2)) * **
+# Waist-Circumference (cm) *
+# Hip Circumference (cm) *
+# Blood Pressure, diastolic (mm Hg) *
+# Blood pressure, systolic (mm Hg) *
+# Pulse (heart beats per min) *
+# Treatment State at T0
+# Smoking (cigarettes per day) *
+# Cannabis (yes/no)
+# Medication (olanzapine, quetinapine, risperidone, other)
+# Cumulative chlorpromazine units (mg)
+
+# * may be correlated with each other
+# ** correlated with outcome
+
+# ************ Input Mean and Standard Deviation of Clinical Variables ********************* #
+# In progress, but only using variables not removed by a " # " so far
+#N = 77
+#N = 18
+N = 15                                  #Group for short and long term relapse analysis
+#Age_T0_mean <- 35.56
+#Age_T0_stddev <- 11.06
+#Age_T6_mean <- Age_T0_mean
+#Age_T6_stddev <- Age_T0_stddev
+Age_TR_mean <- 40.44
+Age_TR_stddev <- 11.89
+#BMI_T0_mean <- 25.35
+#BMI_T0_stddev <- 4.61
+#BMI_T6_mean <- 26.12
+#BMI_T6_stddev <- 4.50
+#BMI_TR_mean <- 26.23                   #Simulated from boxplot
+#BMI_TR_stddev <- 5.28
+#WaistCirc_T0_mean <- 91.08
+#WaistCirc_T0_stddev <- 14.42
+#WaistCirc_T6_mean <- 93.55
+#WaistCirc_T6_stddev <- 13.31
+#WaistCirc_TR_mean <- 92.56
+#WaistCirc_TR_stddev <- 11.92
+#HipCirc_T0_mean <- 101.20
+#HipCirc_T0_stddev <- 10.04
+#HipCirc_T6_mean <- 103.22
+#HipCirc_T6_stddev <- 9.29
+#HipCirc_TR_mean <- 102.72
+#HipCirc_TR_stddev <- 8.78
+#BloodPrD_T0_mean <- 80.65
+#BloodprD_T0_stddev <- 11.46
+#BloodPrD_T6_mean <- 76.68
+#BloodPrD_T6_stddev <- 10.80
+#BloodPrD_TR_mean <- 80.28
+#BloodPrD_TR_stddev <- 9.31
+#BloodPrS_T0_mean <- 129.18
+#BloodPrS_T0_stddev <- 14.91
+#BloodPrS_T6_mean <- 121.36
+#BloodPrS_T6_stddev <- 14.68
+#BloodPrS_TR_mean <- 128.89
+#BloodPrS_TR_stddev <- 14.61
+#Pulse_T0_mean <- 81.81
+#Pulse_T0_stddev <- 12.44
+#Pulse_T6_mean <- 77.84
+#Pulse_T6_stddev <- 12.41
+#Pulse_TR_mean <- 87.78
+#Pulse_TR_stddev <- 15.73
+#Smoke_T0_mean <- 9.47
+#Smoke_T0_stddev <- 9.10
+#Smoke_T6_mean <- 9.57
+#Smoke_T6_stddev <- 9.49
+Smoke_TR_mean <- 10.56
+Smoke_TR_stddev <- 10.09
+#Chlor_T0_mean <- 0
+#Chlor_T0_stddev <- 0
+#Chlor_T6_mean <- 17123
+#Chlor_T6_stddev <- 12657
+
+# ***************************** Factor Variables ********************************* #
+
+#Sex <- sample(c(0,1), 77, replace = T, prob = c(50, 27))
+Sex_TR <- sample(c(0,1), 18, replace = T, prob = c(12, 6))
+#Cannabis_T0 <- sample(c(0,1), 77, replace = T, prob = c(16, 61))
+#Cannabis_T6 <- sample(c(0,1), 77, replace = T, prob = c(3,74))
+Cannabis_TR <- sample(c(0,1), 18, replace = T, prob = c(5,13))
+#Treatment_T0 <- sample(c(0,1), 77, replace = T, prob = c(36,41))
+Treatment_T0 <- sample(c(0,1), 18, replace = T, prob = c(6, 13))
+#Medication <- sample(c(0,1,2,3), 77, replace = T, prob = c(18,14,24,21))
+```
+
+To generate an odds ratio for the prediction of time until relapse, the study divided the cohort who relapsed into two groups: long time (N=8) or short time (N=7) until relapse, further limiting the study to 15 individuals. Table 4 and Table 5 reported the P-Value from ANCOVA analysis, q-value or the p-value adjusted for false discovery rate and the ratio change, analogous for the odds ratio at the last clinical visit before relapse and time of relapse, respectively, but I wasn't successful in finding or creating a method backsimulate data from these components, if it is possible.
+
+More information was provided for the three predictive blood markers with the largest difference in mean response between the two groups after 6 weeks of monitored treatment (Leptin, Insulin and C-peptide) as well as the three blood markers with the largest difference in mean concentrations between short and long term response groups (Leptin, Proinsulin and TGF-alpha levels) and a potential confounding variable, BMI, at the last clinical visit before relapse. This data was represented in box plots in [Figure 3](http://www.nature.com/tp/journal/v2/n2/fig_tab/tp20123f3.html#figure-title) and [Figure 4](http://www.nature.com/tp/journal/v2/n2/fig_tab/tp20123f4.html#figure-title) respectively.
+
+I used runuran, a package to simulate distributions based on mean, standard deviation and upper and lower boundaries based on mean, standard deviation and upper and lower boundaries from the boxplots for both short and long term response groups. This is the most accurate way I could find to replicate the data although there are likely limitations to this method.
+
+```{r include = FALSE, message = FALSE}
+# ****************** Distributions of Blood Markers ******************* #
+
+# https://stats.stackexchange.com/questions/30303/how-to-simulate-data-that-satisfy-specific-constraints-such-as-having-specific-m
+#install.packages("Runuran")
+require("Runuran")
+library("Runuran")
+```
+
+```{r include = FALSE, eval = FALSE}
+# From mean and sd predicted from literature (above section)
+# Potential to use for comparison to generated results
+Insulin_T0 <- urnorm(n = 77, mean = Insulin_T0_mean, sd = Insulin_T0_SD) #lb = 0, ub = 100)
+Insulin_T6 <- urnorm(n = 77, mean = Insulin_T6_mean, sd = Insulin_T6_SD) #lb = 0, ub = 100)
+Leptin_T0 <- urnorm(n = 77, mean = Leptin_T0_mean, sd = Leptin_T0_SD)
+Leptin_T6 <- urnorm(n = 77, mean = Leptin_T6_mean, sd = Leptin_T6_SD)
+```
+
+```{r}
+# From boxplots from Figure 3:
+BMI_TR_short <- urnorm(n = 7, mean = 23, sd = 3, lb = 18, ub = 24) # (kg/m^2)
+BMI_TR_long <- urnorm(n = 8, mean = 27, sd = 13, lb = 23, ub = 32) 
+Leptin_TR_short <- urnorm(n = 7, mean = 2, sd = 5, lb = 0.5, ub = 10) # (ng/ml)
+Leptin_TR_long <- urnorm(n = 8, mean = 19, sd = 13, lb = 2, ub = 27) 
+Proinsulin_TR_short <- urnorm(n = 7, mean = 1, sd = 2, lb = 0.2, ub = 4) # [pM]
+Proinsulin_TR_long <- urnorm(n = 8, mean = 1, sd = 4, lb = 1.5, ub = 10)
+TGFalpha_TR_short <- urnorm(n = 7, mean = 19, sd = 7, lb = 17, ub = 30) # [pg/ml]
+TGFalpha_TR_long <- urnorm(n = 8, mean = 2, sd = 1, lb = 1, ub = 3)
+
+# Simulate data from boxplots from Figure 4:
+# Different data, difference in the change of levels between T0 and T6
+Leptin_T6T0_short <- urnorm(n = 7, mean = 1.5, sd = 1, lb = 0.5, ub = 2) # [ng/ml]
+Leptin_T6T0_long <- urnorm(n = 8, mean = 12, sd = 10, lb = -4, ub = 17)
+Insulin_T6T0_short <- urnorm(n = 7, mean = 0, sd = 1, lb = -1, ub = 2) # [uIU/ml]
+Insulin_T6T0_long <- urnorm(n = 8, mean = 4, sd = 1, lb = 1, ub = 8)
+CPeptide_T6T0_short <- urnorm(n = 7, mean = 0, sd = 0.4, lb = -0.4, ub = 0.4) # [ng/ml]
+CPeptide_T6T0_long <- urnorm(n = 8, mean = 0.8, sd = 2, lb = 0, ub = 2)
+
+# Bind Variables by Short Term Relapse and Long Term Relapse Group
+boxplot.short.df <- data.frame(cbind(BMI_TR_short, Leptin_TR_short, Proinsulin_TR_short, Leptin_T6T0_short, Insulin_T6T0_short, CPeptide_T6T0_short, TGFalpha_TR_short))
+boxplot.long.df <- data.frame(cbind(BMI_TR_long, Leptin_TR_long, Proinsulin_TR_long, Leptin_T6T0_long, Insulin_T6T0_long, CPeptide_T6T0_long, TGFalpha_TR_long))
+```
+
+```{r include = FALSE, message = FALSE}
+# Boxplots for Short Term Relapse and Long Term Relapse Groups
+# http://stackoverflow.com/questions/7147836/how-to-generate-boxplot
+library("reshape")
+boxplot.short.melt <- data.frame(melt(as.matrix(boxplot.short.df)))
+boxplot.long.melt <- data.frame(melt(as.matrix(boxplot.long.df)))
+library("ggplot2")
+```
+
+```{r include = FALSE, eval = FALSE}
+ggshort <- ggplot(boxplot.short.melt, aes(x = X1, y = value))
+ggshort + geom_boxplot()
+gglong <- ggplot(boxplot.long.melt, aes(x = X1, y = value))
+gglong + geom_boxplot()
+```
+
+After creating separate data frames for the short and long term groups, I added a column with a binomial group column, with 1 identifying long term response and 0 indicating short term response.
+
+```{r}
+# Add binary variable for short term (0) and long term (1) relapse group
+# http://r.789695.n4.nabble.com/help-to-add-a-new-column-filled-with-value-1-td3034361.html
+boxplot.short.df$group <- rep(0, nrow(boxplot.short.df))
+boxplot.long.df$group <- rep(1, nrow(boxplot.long.df))
+```
+
+I then relabelled the column titles for both data frames so they matched then combined them.
+
+```{r}
+# Combine the dataframes
+# http://www.cookbook-r.com/Manipulating_data/Renaming_columns_in_a_data_frame/
+boxplot.short.df <- plyr::rename(boxplot.short.df, replace = c("BMI_TR_short"="BMI_TR", "Leptin_TR_short"="Leptin_TR", "Proinsulin_TR_short"="Proinsulin_TR", "Leptin_T6T0_short"="Leptin_T6T0", "Insulin_T6T0_short"="Insulin_T6T0", "CPeptide_T6T0_short"="CPeptide_T6T0", "TGFalpha_TR_short"="TGFalpha_TR", "group"="Group"), warn_missing = F, warn_duplicated = F)
+boxplot.long.df <- plyr::rename(boxplot.long.df, replace = c("BMI_TR_long"="BMI_TR", "Leptin_TR_long"="Leptin_TR", "Proinsulin_TR_long"="Proinsulin_TR", "Leptin_T6T0_long"="Leptin_T6T0", "Insulin_T6T0_long"="Insulin_T6T0", "CPeptide_T6T0_long"="CPeptide_T6T0", "TGFalpha_TR_long"="TGFalpha_TR", "group"="Group"), warn_missing = F, warn_duplicated = F)
+boxplot.final <- rbind(boxplot.long.df, boxplot.short.df)
+```
+
+```{r include = FALSE, eval = FALSE}
+# Cumulative distributions of all blood marker variables
+# ....should remove group.....
+boxplot.final.melt <- data.frame(melt(as.matrix(boxplot.final)))
+ggfinal <- ggplot(boxplot.final.melt, aes(x = X2, y = value))
+ggfinal + geom_boxplot()
+```
+
+With the data organized in this fashion, I could replicate the boxplots in the paper exactly and compare. While the distributions aren't exact, they are fairly similar. Tweaking the distributions further could produce better results.
+
+```{r fig.cap= "Estimation of BMI and Blood Based Markers in short (0) and long(1) term relapse groups from Boxplots in [Figure 3](http://www.nature.com/tp/journal/v2/n2/fig_tab/tp20123f3.html#figure-title) using Runuran."}
+# Replicate Figure 3 and Figure 4 diagrams from paper
+# http://www.statmethods.net/graphs/boxplot.html
+par(mfrow=c(1,4))
+boxplot(BMI_TR~Group, data = boxplot.final, main="BMI before Relapse", xlab="Group", ylab="BMI (kg/m^2)" )
+boxplot(Leptin_TR~Group, data = boxplot.final, main="Leptin before Relapse", xlab="Group", ylab="Leptin (ng/ml)" )
+boxplot(Proinsulin_TR~Group, data = boxplot.final, main="Proinsulin before Relapse", xlab="Group", ylab="Proinsulin [pM]" )
+boxplot(TGFalpha_TR~Group, data = boxplot.final, main="TGFalpha before Relapse", xlab="Group", ylab="TGFalpha [pg/ml]" )
+```
+
+```{r fig.cap= "Estimation of the Change in Blood Based Markers after Six Weeks Treatment of Blood Based Markers from Boxplots in [Figure 4](http://www.nature.com/tp/journal/v2/n2/fig_tab/tp20123f4.html#figure-title) using Runuran."}
+par(mfrow=c(1,3))
+boxplot(Leptin_T6T0~Group, data = boxplot.final, main="Leptin Response", xlab="Group", ylab="Change in Leptin [ng/ml]" )
+boxplot(Insulin_T6T0~Group, data = boxplot.final, main="Insulin Response", xlab="Group", ylab="Change in Insulin [uIU/ml]" )
+boxplot(CPeptide_T6T0~Group, data = boxplot.final, main="C-peptide Response", xlab="Group", ylab="C-peptide [ng/ml]")
+```
+
+After shuffling the rows in the table, I then added several clinical or demographic variables that were found not to be significantly correlated to response derived from probability or normal distributions.
+
+```{r}
+# ********** Add Clinical Variables to Blood Marker Variables ************ #
+
+# Add *mainly* independent variables to data frame, use N=15 but probabilities for N=18
+# http://www.cookbook-r.com/Manipulating_data/Randomizing_order/
+# data <- data[sample(1:nrow(data)), ]
+boxplot.mix <- boxplot.final[sample(1:nrow(boxplot.final)), ]
+boxplot.mix$Age_TR <- rnorm(15, mean = Age_TR_mean, sd = Age_TR_stddev)
+boxplot.mix$Smoke_TR <- rnorm(15, mean = Smoke_TR_mean, sd = Smoke_TR_stddev)
+boxplot.mix$Sex_TR <- sample(c(0,1), 15, replace = T, prob = c(12, 6))
+boxplot.mix$Cannabis_TR <- sample(c(0,1), 15, replace = T, prob = c(5,13))
+boxplot.mix$Treatment_T0 <- sample(c(0,1), 15, replace = T, prob = c(6, 13))
+```
+
+```{r include = FALSE, message = FALSE}
+########################### Data Analysis ##################################
+# Use Wilcoxon and ANCOVA
+
+# ***************************** Wilcoxon Rank Sum Test ******************* #
+# http://www.astrostatistics.psu.edu/su07/R/html/stats/html/wilcox.test.html
+#install.packages("stats")
+library("stats")
+# http://stackoverflow.com/questions/40330577/r-select-and-assign-value-to-group-based-on-condition-in-column
+#install.packages("dplyr")
+library("dplyr")
+# browseVignettes(package = "dplyr")
+```
+
+As in the paper, I did non-parametric Wilcoxon tests to assess the difference in means between the short term and long term relapse groups for blood marker levels and response as well as for demographic variables.
+
+```{r}
+# http://stackoverflow.com/questions/15639855/how-to-get-a-list-of-pvalues
+W_BMI_TR <- wilcox.test(filter(boxplot.mix, Group == 0)$BMI_TR, filter(boxplot.mix, Group == 1)$BMI_TR)$p.value
+W_Leptin_TR <- wilcox.test(filter(boxplot.mix, Group == 0)$Leptin_TR, filter(boxplot.mix, Group == 1)$Leptin_TR)$p.value
+W_Proinsulin_TR <- wilcox.test(filter(boxplot.mix, Group == 0)$Proinsulin_TR, filter(boxplot.mix, Group == 1)$Proinsulin_TR)$p.value
+W_TGFalpha_TR <- wilcox.test(filter(boxplot.mix, Group == 0)$TGFalpha_TR, filter(boxplot.mix, Group == 1)$TGFalpha_TR)$p.value
+W_Leptin_T6T0 <- wilcox.test(filter(boxplot.mix, Group == 0)$Leptin_T6T0, filter(boxplot.mix, Group == 1)$Leptin_T6T0)$p.value
+W_Insulin_T6T0 <- wilcox.test(filter(boxplot.mix, Group == 0)$Insulin_T6T0, filter(boxplot.mix, Group == 1)$Insulin_T6T0)$p.value
+W_CPeptide_T6T0 <- wilcox.test(filter(boxplot.mix, Group == 0)$CPeptide_T6T0, filter(boxplot.mix, Group == 1)$CPeptide_T6T0)$p.value
+W_Age_TR <- wilcox.test(filter(boxplot.mix, Group == 0)$Age_TR, filter(boxplot.mix, Group == 1)$Age_TR)$p.value
+W_Smoke_TR <- wilcox.test(filter(boxplot.mix, Group == 0)$Smoke_TR, filter(boxplot.mix, Group == 1)$Smoke_TR)$p.value
+```
+
+```{r include = FALSE}
+#W_Sex_TR <- wilcox.test(filter(boxplot.mix, Group == 0)$Sex_TR, filter(boxplot.mix, Group == 1)$Sex_TR)
+#W_Cannabis_TR <- wilcox.test(filter(boxplot.mix, Group == 0)$Cannabis_TR, filter(boxplot.mix, Group == 1)$Cannabis_TR)
+#W_Treatment_T0 <- wilcox.test(filter(boxplot.mix, Group == 0)$Treatment_T0, filter(boxplot.mix, Group == 1)$Treatment_T0)
+```
+
+I stored the p values as a vector.
+
+```{r}
+# http://stackoverflow.com/questions/21840021/grabbing-certain-results-out-of-multiple-t-test-outputs-to-create-a-table
+W.v <- list(W_BMI_TR, W_Leptin_TR, W_Proinsulin_TR, W_TGFalpha_TR, W_Leptin_T6T0, W_Insulin_T6T0, W_CPeptide_T6T0, W_Age_TR, W_Smoke_TR)
+```
+
+I then calculated the means for the short term and long term response groups to store in vectors.
+
+```{r}
+# Calculate mean for each variable for each group
+M_BMI_TR.0 <- mean(filter(boxplot.mix, Group == 0)$BMI_TR)
+M_BMI_TR.1 <- mean(filter(boxplot.mix, Group == 1)$BMI_TR)
+M_Leptin_TR.0 <- mean(filter(boxplot.mix, Group == 0)$Leptin_TR)
+M_Leptin_TR.1 <- mean(filter(boxplot.mix, Group == 1)$Leptin_TR)
+M_Proinsulin_TR.0 <- mean(filter(boxplot.mix, Group == 0)$Proinsulin_TR)
+M_Proinsulin_TR.1 <- mean(filter(boxplot.mix, Group == 1)$Proinsulin_TR)
+M_TGFalpha_TR.0 <- mean(filter(boxplot.mix, Group == 0)$TGFalpha_TR)
+M_TGFalpha_TR.1 <- mean(filter(boxplot.mix, Group == 1)$Leptin_T6T0)
+M_Leptin_T6T0.0 <- mean(filter(boxplot.mix, Group == 0)$Leptin_T6T0)
+M_Leptin_T6T0.1 <- mean(filter(boxplot.mix, Group == 1)$Leptin_T6T0)
+M_Insulin_T6T0.0 <- mean(filter(boxplot.mix, Group == 0)$Insulin_T6T0)
+M_Insulin_T6T0.1 <- mean(filter(boxplot.mix, Group == 1)$Insulin_T6T0)
+M_CPeptide_T6T0.0 <- mean(filter(boxplot.mix, Group == 0)$CPeptide_T6T0)
+M_CPeptide_T6T0.1 <- mean(filter(boxplot.mix, Group == 1)$CPeptide_T6T0)
+M_Age_TR.0 <- mean(filter(boxplot.mix, Group == 0)$Age_TR)
+M_Age_TR.1 <- mean(filter(boxplot.mix, Group == 1)$Age_TR)
+M_Smoke_TR.0 <- mean(filter(boxplot.mix, Group == 0)$Smoke_TR)
+M_Smoke_TR.1 <- mean(filter(boxplot.mix, Group == 1)$Smoke_TR)
+M0.v <- c(M_BMI_TR.0, M_Leptin_TR.0, M_Proinsulin_TR.0, M_TGFalpha_TR.0, M_Leptin_T6T0.0, M_Insulin_T6T0.0, M_CPeptide_T6T0.0, M_Age_TR.0, M_Smoke_TR.0)
+M1.v <- c(M_BMI_TR.1, M_Leptin_TR.1, M_Proinsulin_TR.1, M_TGFalpha_TR.1, M_Leptin_T6T0.1, M_Insulin_T6T0.1, M_CPeptide_T6T0.1, M_Age_TR.1, M_Smoke_TR.1)
+```
+
+I then combined the means and Wilcoxon derived significance values into one table.
+
+```{r}
+# Make data frame: mean between groups, p-value Wilcox test
+name.v <- c("BMI", "Leptin", "Proinsulin", "TGF-alpha", "Change Leptin", "Change Insulin", "Change C-peptide", "Age", "Smoke")
+wilcox.df <- data.frame(cbind(name.v, M0.v, M1.v, W.v))
+wilcox.df <- plyr::rename(wilcox.df, replace = c("name.v"="Variable", "M0.v"="Mean Short", "M1.v"="Mean Long", "W.v"="P Value"), warn_missing = F, warn_duplicated = F)
+# http://rmarkdown.rstudio.com/lesson-7.html
+#install.packages("knitr")
+library("knitr")
+kable(wilcox.df, caption = "Difference in means between short and long term relapes and Significance Assessed by Wilcoxon Sum Test")
+```
+
+Analysis of the continuous demographic variables show clearly that there is not a significant difference between those generated randomly while there is a significant difference in the bloodmarkers. However, the sample size is small and further assessment of power with more [replicates](http://r.789695.n4.nabble.com/How-to-compute-the-power-of-a-wilcoxon-test-td3815616.html) or different [sample sizes](https://support.sas.com/documentation/cdl/en/statug/63033/HTML/default/viewer.htm#statug_power_sect025.htm) would be helpful. 
+
+I did some preliminary code with producing ANCOVA scores using BMI being a potential confounding factor which is still in progress. My strategy is to assess the change in normality with the original distribution and the log10 transformation of these values with the Shapiro Wilkes and qplots. Random Forest analysis was also used to analyse significance although with the amount of information provided about the blood markers, this would be difficult to incorporate into analysis.
+
+```{r include = FALSE, eval = FALSE}
+# *********************** Analysis of Co-Variance ************************ #
+# Look at data to analyse variability, choose transformation technique
+# Getting unhelpful results, may try 1/Y instead...
+# http://www.basic.northwestern.edu/statguidefiles/ancova_alts.html#Transformations
+# http://www.statmethods.net/graphs/scatterplot.html
+# https://stats.stackexchange.com/questions/3136/how-to-perform-a-test-using-r-to-see-if-data-follows-normal-distribution
+
+# First look at log10 transformation...
+par(mfrow = c(1,2))
+BL1 <- plot(boxplot.mix$BMI_TR, boxplot.mix$Leptin_TR)
+LB1 <- plot(boxplot.mix$Leptin_TR, boxplot.mix$BMI_TR)
+BMI_TR_log <- log10(boxplot.mix$BMI_TR)
+Leptin_TR_log <- log10(boxplot.mix$Leptin_TR)
+BL2 <- plot(BMI_TR_log, Leptin_TR_log)
+LB2 <- plot(Leptin_TR_log, BMI_TR_log)
+hist(boxplot.mix$BMI_TR)
+hist(BMI_TR_log)
+shapiro.test(boxplot.mix$BMI_TR)
+shapiro.test(BMI_TR_log)
+qqnorm(boxplot.mix$BMI_TR)
+qqnorm(BMI_TR_log)
+hist(boxplot.mix$Leptin_TR)
+hist(Leptin_TR_log)
+shapiro.test(boxplot.mix$Leptin_TR)
+shapiro.test(Leptin_TR_log)
+BP1 <- plot(boxplot.mix$BMI_TR, boxplot.mix$Proinsulin_TR)
+PB1 <- plot(boxplot.mix$Proinsulin_TR, boxplot.mix$BMI_TR)
+Proinsulin_TR_log <- log10(boxplot.mix$Proinsulin_TR)
+BP2 <- plot(BMI_TR_log, Proinsulin_TR_log)
+PB2 <- plot(Proinsulin_TR_log, BMI_TR_log)
+hist(boxplot.mix$Proinsulin_TR)
+hist(Proinsulin_TR_log)
+shapiro.test(boxplot.mix$Proinsulin_TR)
+shapiro.test(Proinsulin_TR_log)
+qqnorm(boxplot.mix$Proinsulin_TR)
+qqnorm(Proinsulin_TR_log)
+BT1 <- plot(boxplot.mix$BMI_TR, boxplot.mix$TGFalpha_TR)
+TB1 <- plot(boxplot.mix$TGFalpha_TR, boxplot.mix$BMI_TR)
+TGFalpha_TR_log <- log10(boxplot.mix$TGFalpha_TR)
+BT2 <- plot(BMI_TR_log, TGFalpha_TR_log)
+TB2 <- plot(TGFalpha_TR_log, BMI_TR_log)
+hist(boxplot.mix$TGFalpha_TR)
+hist(TGFalpha_TR_log)
+
+# Test 1/Y transformation to see if get better results...
+# Tried 1/Y and log(1/Y) and no better....
+BL1 <- plot(boxplot.mix$BMI_TR, boxplot.mix$Leptin_TR)
+LB1 <- plot(boxplot.mix$Leptin_TR, boxplot.mix$BMI_TR)
+BMI_TR_inv <- log10(1/(boxplot.mix$BMI_TR))
+Leptin_TR_inv <- log10(1/(boxplot.mix$Leptin_TR))
+BL2 <- plot(BMI_TR_inv, Leptin_TR_inv)
+LB2 <- plot(Leptin_TR_inv, BMI_TR_inv)
+hist(boxplot.mix$BMI_TR)
+hist(BMI_TR_inv)
+shapiro.test(boxplot.mix$BMI_TR)
+shapiro.test(BMI_TR_inv)
+qqnorm(boxplot.mix$BMI_TR)
+qqnorm(BMI_TR_inv)
+hist(boxplot.mix$Leptin_TR)
+hist(Leptin_TR_inv)
+
+# Decide to stick with paper's logic, log10 to 'approximate normality'
+# Sample size may be to small for accurate predictions? Not sure
+# Generate log10 variabes
+boxplot.log.df <- data.frame(apply(boxplot.mix[1:7], 2, abs), boxplot.mix[8], apply(boxplot.mix[9:10], 2, abs), boxplot.mix[11:13])
+boxplot.log.df <- data.frame(apply(boxplot.log.df[1:7], 2, log10), boxplot.log.df[8], apply(boxplot.log.df[9:10], 2, log10), boxplot.log.df[11:13])
+
+# Analyse covariance with BMI_TR, non-transformed values....
+# https://www.tutorialspoint.com/r/r_analysis_of_covariance.htm
+R1_Leptin_TR <- aov(Group~Leptin_TR*BMI_TR, data = boxplot.mix)
+R2_Leptin_TR <- aov(Group~Leptin_TR+BMI_TR, data = boxplot.mix)
+summary(R1_Leptin_TR)
+summary(R2_Leptin_TR)
+A_Leptin_TR <- anova(R1_Leptin_TR, R2_Leptin_TR)
+AT_Leptin_TR <- list(R1_Leptin_TR, R2_Leptin_TR, A_Leptin_TR)
+R1_Proinsulin_TR <- aov(Group~Proinsulin_TR*BMI_TR, data = boxplot.mix)
+R2_Proinsulin_TR <- aov(Group~Proinsulin_TR+BMI_TR, data = boxplot.mix)
+summary(R1_Proinsulin_TR)
+summary(R2_Proinsulin_TR)
+A_Proinsulin_TR <- anova(R1_Proinsulin_TR, R2_Proinsulin_TR)
+AT_Proinsulin_TR <- list(R1_Proinsulin_TR, R2_Proinsulin_TR, A_Proinsulin_TR)
+R1_TGFalpha_TR <- aov(Group~TGFalpha_TR*BMI_TR, data = boxplot.mix)
+R2_TGFalpha_TR <- aov(Group~TGFalpha_TR+BMI_TR, data = boxplot.mix)
+summary(R1_TGFalpha_TR)
+summary(R2_TGFalpha_TR)
+A_TGFalpha_TR <- anova(R1_TGFalpha_TR, R2_TGFalpha_TR)
+AT_TGFalpha_TR <- list(R1_TGFalpha_TR, R2_TGFalpha_TR, A_TGFalpha_TR)
+TA_BMI_test <- list(summary(AT_Leptin_TR), summary(AT_Proinsulin_TR), summary(AT_TGFalpha_TR))
+
+# Analyse ANCOVA with log10 transformed values
+R1_Leptin_TR <- aov(Group~Leptin_TR*BMI_TR, data = boxplot.log.df)
+R2_Leptin_TR <- aov(Group~Leptin_TR+BMI_TR, data = boxplot.log.df)
+summary(R1_Leptin_TR)
+summary(R2_Leptin_TR)
+A_Leptin_TR <- anova(R1_Leptin_TR, R2_Leptin_TR)
+AT_Leptin_TR <- list(R1_Leptin_TR, R2_Leptin_TR, A_Leptin_TR)
+R1_Proinsulin_TR <- aov(Group~Proinsulin_TR*BMI_TR, data = boxplot.log.df)
+R2_Proinsulin_TR <- aov(Group~Proinsulin_TR+BMI_TR, data = boxplot.log.df)
+summary(R1_Proinsulin_TR)
+summary(R2_Proinsulin_TR)
+A_Proinsulin_TR <- anova(R1_Proinsulin_TR, R2_Proinsulin_TR)
+AT_Proinsulin_TR <- list(R1_Proinsulin_TR, R2_Proinsulin_TR, A_Proinsulin_TR)
+R1_TGFalpha_TR <- aov(Group~TGFalpha_TR*BMI_TR, data = boxplot.log.df)
+R2_TGFalpha_TR <- aov(Group~TGFalpha_TR+BMI_TR, data = boxplot.log.df)
+summary(R1_TGFalpha_TR)
+summary(R2_TGFalpha_TR)
+A_TGFalpha_TR <- anova(R1_TGFalpha_TR, R2_TGFalpha_TR)
+AT_TGFalpha_TR <- list(R1_TGFalpha_TR, R2_TGFalpha_TR, A_TGFalpha_TR)
+TA_BMI <- list(AT_Leptin_TR, AT_Proinsulin_TR, AT_TGFalpha_TR)
+
+######################### Notes and Incomplete Work ################################
+
+# ************************ Add Correlated Variables **************************** #
+#Having a lot of trouble with this, haven't figured out a method......
+
+# https://www.rdocumentation.org/packages/ecodist/versions/1.2.9/topics/corgen
+# y <- corgen(x=x, r=.5, epsilon=.01)$y
+install.packages("ecodist")
+library("ecodist")
+x <- corgen(x = boxplot.final$BMI_TR, r=3.688875, epsilon = 0.5)$Waist_TR
+
+# ****************** Technique from Bob Horton ************************************ #
+# Issues with this. Waist circ. isn't always smaller than hip circ.
+# Waist and Hip Circumference are directly correlated to BMI at TR
+# Values from paper:
+# BMI_TR_mean <- 26.23
+# BMI_TR_stddev <- 5.28
+# WaistCirc_TR_mean <- 92.56
+# WaistCirc_TR_stddev <- 11.92
+summary(boxplot.final$BMI_TR)
+BMI_TR_mean = mean(boxplot.final$BMI_TR)
+BMI_TR_stddev = sd(boxplot.final$BMI_TR)
+WaistCirc_TR_K = WaistCirc_TR_mean / BMI_TR_mean
+boxplot.final$WaistCirc_TR = WaistCirc_TR_K * (boxplot.final$BMI_TR - BMI_TR_mean) + WaistCirc_TR_mean + rnorm(15, sd=WaistCirc_TR_stddev)
+hist(WaistCirc_TR)
+hist(boxplot.final$BMI_TR)
+summary(boxplot.final$WaistCirc_TR)
+WaistCirc_TR_mean = mean(boxplot.final$WaistCirc_TR)
+WaistCirc_TR_stddev = sd(boxplot.final$WaistCirc_TR)
+HipCirc_TR_K = HipCirc_TR_mean / WaistCirc_TR_mean
+boxplot.final$HipCirc_TR = HipCirc_TR_K * (boxplot.final$WaistCirc_TR - WaistCirc_TR_mean) + HipCirc_TR_mean + rnorm(15, sd=HipCirc_TR_stddev)
+hist(boxplot.final$HipCirc_TR)
+hist(boxplot.final$BMI_TR)
+summary(boxplot.final$HipCirc_TR)
+
+# http://stackoverflow.com/questions/6286313/remove-an-entire-column-from-a-data-frame-in-r
+boxplot.final$WaistCirc_TR <- NULL
+boxplot.final$HipCirc_TR <- NULL
+
+# ***************** Notes ****************** #
+# Based on code from Bob Horton to simulate weight off of height from class notes:
+# Typically simulate height first, than base the weight off the height
+sampH2010_1 <- rnorm(N, mean=M_HEIGHT_2010_MEAN, sd=HEIGHT_SD)
+# Method by Bob Thorton to simulate weight off of height
+sampW2010_1 <- 1.2 * ( sampH2010_1 - M_HEIGHT_2010_MEAN) + M_WEIGHT_2010_MEAN + rnorm(N, sd=WEIGHT_SD)
+sampH1960_1<- rnorm(N, mean=M_HEIGHT_1960_MEAN, sd=HEIGHT_SD)
+sampW1960_1 <- 1.2 * ( sampH1960_1 - M_HEIGHT_1960_MEAN) + M_WEIGHT_1960_MEAN + rnorm(N, sd=WEIGHT_SD)
+
+sampH2010_2 <- rnorm(N, mean=M_HEIGHT_2010_MEAN, sd=HEIGHT_SD-.05)
+sampW2010_2 <- 1.2 * ( sampH2010_2 - M_HEIGHT_2010_MEAN) + M_WEIGHT_2010_MEAN + rnorm(N, sd=WEIGHT_SD-7)
+sampH1960_2<- rnorm(N, mean=M_HEIGHT_1960_MEAN, sd=HEIGHT_SD-.05)
+sampW1960_2 <- 1.2 * ( sampH1960_2 - M_HEIGHT_1960_MEAN) + M_WEIGHT_1960_MEAN + rnorm(N, sd=WEIGHT_SD-7)
+
+
+
+# ************************ Notes to Create Data from Odds Ratio ********************* #
+
+# Function from https://www.r-bloggers.com/logistic-regression-simulation-for-a-power-calculation/
+# Discovered/provided by Rashmi
+# Remove portions that convert the function into a uniform 
+nn <- 950
+runs <- 100000
+intercept <- log(2)
+odds.ratio <- 0.18
+beta <- log(odds.ratio)
+proportion  <-  replicate(
+  n = runs,
+  expr = {
+    xtest <- rnorm(nn)
+    linpred <- intercept + (xtest * beta)
+    prob <- exp(linpred)/(1 + exp(linpred))
+    runis <- runif(length(xtest),0,1)
+    ytest <- ifelse(runis < prob,1,0)
+    prop <- length(which(ytest <= 0.5))/length(ytest)
+  }
+)
+summary(proportion)
+summary(prob)
+
+hist(proportion)
+length(proportion)
+
+result <-  replicate(
+  n = runs,
+  expr = {
+    xtest <- rnorm(nn)
+    linpred <- intercept + (xtest * beta)
+    prob <- exp(linpred)/(1 + exp(linpred))
+    runis <- runif(length(xtest),0,1)
+    ytest <- ifelse(runis < prob,1,0)
+    summary(model <- glm(ytest ~ xtest,  family = "binomial"))$coefficients[2,4] < .05
+  }
+)
+print(sum(result)/runs)
+
+# ********************* Notes to Simulate Data from Quantile Information ************* #
+
+# examples from: https://stats.stackexchange.com/questions/30303/how-to-simulate-data-that-satisfy-specific-constraints-such-as-having-specific-m
+
+## Normal distribution bounded between 0 and 100
+d1 <- urnorm(n = 1000, mean = 20, sd = 25, lb = 0, ub = 100)
+
+summary(d1)
+sd(d1)
+hist(d1)
+
+# urnorm wrapper with upper and lower bounds:
+require("Runuran")
+
+## Discrete normal distribution bounded between 0 and 100
+# Create UNU.RAN discrete distribution object
+discrete <- unuran.discr.new(pv = dnorm(0:100, mean = 50, sd = 25), lb = 0, ub = 100)
+
+# Create UNU.RAN object using the Guide-Table Method for Discrete Inversion
+unr <- unuran.new(distr = discrete, method = "dgt")
+
+# Generate random variates from the UNU.RAN object
+d2 <- ur(unr = unr, n = 1000)
+
+summary(d2)
+sd(d2)
+head(d2)
+hist(d2)
+
+# ************************ Blood Molecular Signatures **************************** #
+#Start with the blood molecules in which I'm given a distribution
+#Add in other variables if I come up with a method to make distribution
+
+#Amphiregulin
+#Apolipoprotein_CI
+#Beta2Microglobulin
+#BetaCellulin
+#BrainDerNeurotrophicFactor
+#CD5L
+#CD40
+#Cpeptide
+#CreatineKinaseMB
+#FattyAcidBindingProt
+#Ferratin
+#FGFbasic
+#HepatoyteGrowthFact
+################ Estimated from literature, but use boxplot to estimate change for TR
+#Insulin_T0_mean <- 18.65
+#Insulin_T0_SD <- 25.65
+#Insulin_T6_mean <- 22.45
+#Insulin_T6_SD <- 24.44
+#Interleukin12subup40
+#Interleukin16
+################ Estimated from literature, but use boxplot to estimate change for TR
+#Leptin_T0_mean <- 7.68
+#Leptin_T0_SD <- 7.71
+#Leptin_T6_mean <- 21.61
+#Leptin_T6_SD <- 17.13
+#MacDerChemokine
+#MacInflProt1beta
+#MatMetalloProt2
+#MatMetalloProt7
+#MatMetalloProt9
+#Myoglobulin
+#NGAL
+#Osteopontin
+#ProinsulinTot
+#Proinsulin
+#Thrombospondin1
+#PulmActRefChemokine
+#TransfGrowthFactorAlpha
+#TumorGrowthFactRecL2
+
+# ********************************* Response Variables ***************************** #
+
+## Normal Distribution
+PANSSp1p7_T0_mean <- 22.97
+PANSSp1p7_T0_stddev <- 12.68
+PANSSp1p7_T6_mean <- 12.68
+PANSSp1p7_T6_stddev <- 5.30
+PANSSp1p7_TR_mean <- 22.11
+PANSSp1p7_TR_stddev <- 6.11
+PANSSn1n7_T0_mean <- 19.33
+PANSSn1n7_T0_stddev <- 8.69
+PANSSn1n7_T6_mean <- 14.36
+PANSSn1n7_T6_stddev <- 6.83
+PANSSn1n7_TR_mean <- 17.67
+PANSSn1n7_TR_stddev <- 8.24
+PANSSg1g16_T0_mean <- 42.99
+PANSSg1g16_T0_stddev <- 10.33
+PANSSg1g16_T6_mean <- 28.69
+PANSSg1g16_T6_stddev <- 9.09
+PANSSg1g16_TR_mean <- 38.83
+PANSSg1g16_TR_stddev <- 13.44
+HAMD_T0_mean <- 17.43
+HAMD_T0_stddev <- 9.59
+HAMD_T6_mean <- 7.08
+HAMD_T6_stddev <- 6.94
+HAMD_TR_mean <- 19.33
+HAMD_TR_stddev <- 11.66
+
+## Factor Variable
+TimeRelapse <- sample(c(0,1), 18, replace = T, prob = c(9,9))
+
+# ******************** Distribution Curves Generated Without Correlation ************************ #
+
+Age_T0 <- rnorm(77, mean = Age_T0_mean, sd = Age_T0_stddev)
+Age_T6 <- Age_T0
+Age_TR <- rnorm(18, mean = Age_TR_mean, sd = Age_TR_stddev)
+BMI_T0 <- rnorm(77, mean = BMI_T0_mean, sd = BMI_T0_stddev)
+BMI_T6 <- rnorm(77, mean = BMI_T6_mean, sd = BMI_T6_stddev)
+BMI_TR <- rnorm(18, mean = BMI_TR_mean, sd = BMI_TR_stddev)
+WaistCirc_T0 <- rnorm(77, mean = WaistCirc_T0_mean, sd = WaistCirc_T0_stddev)
+WaistCir_T6 <- rnorm(77, mean = WaistCirc_T6_mean, sd = WaistCirc_T6_stddev)
+WaistCir_TR <- rnorm(18, mean = WaistCirc_TR_mean, sd = WaistCirc_TR_stddev)
+HipCirc_T0 <- rnorm(77, mean = HipCirc_T0_mean, sd = HipCirc_T0_stddev)
+HipCirc_T6 <- rnorm(77, mean = HipCirc_T6_mean, sd = HipCirc_T6_stddev)
+HipCirc_TR <- rnorm(18, mean = HipCirc_TR_mean, sd = HipCirc_TR_stddev)
+BloodPrD_T0 <- rnorm(77, mean = BloodPrD_T0_mean, sd = BloodprD_T0_stddev)
+BloodPrD_T6 <- rnorm(77, mean = BloodPrS_T6_mean, sd = BloodPrS_T6_stddev)
+BloodPrD_TR <- rnorm(18, mean = BloodPrD_TR_mean, sd = BloodPrD_TR_stddev)
+BloodPrS_T0 <- rnorm(77, mean = BloodPrS_T0_mean, sd = BloodPrS_T0_stddev)
+BloodPrS_T6 <- rnorm(77, mean = BloodPrS_T6_mean, sd = BloodPrS_T6_stddev)
+BloodPrS_TR <- rnorm(18, mean = BloodPrS_TR_mean, sd = BloodPrS_TR_stddev)
+Pulse_T0 <- rnorm(77, mean = Pulse_T0_mean, sd = Pulse_T0_stddev)
+Pulse_T6 <- rnorm(77, mean = Pulse_T6_mean, sd = Pulse_T6_stddev)
+Pulse_TR <- rnorm(18, mean = Pulse_TR_mean, sd = Pulse_TR_stddev)
+Smoke_T0 <- rnorm(77, mean = Smoke_T0_mean, sd = Smoke_T0_stddev)
+Smoke_T6 <- rnorm(77, mean = Smoke_T6_mean, sd = Smoke_T6_stddev)
+Smoke_TR <- rnorm(18, mean = Smoke_TR_mean, sd = Smoke_TR_stddev)
+Chlor_T0 <- rnorm(77, mean = Chlor_T0_mean, sd = Chlor_T0_stddev)
+Chlor_T6 <- rnorm(77, mean = Chlor_T6_mean, sd = Chlor_T6_stddev)
+```
