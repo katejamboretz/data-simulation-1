@@ -2,6 +2,10 @@
 
 This webpage describes the logic of code written in R to simulate data and statistics generated in a publication on the correlation of schizophrenia patient history and blood markers on drug response. This was an assignment for Statistical Computing for Biomedical Data Analytics, part of the Bioinformatics focus of University of San Francisco's Professional Masters Degree in Biotechnology.
 
+## Link to Deployed Web Page
+
+[Report](https://katejamboretz.github.io/data-simulation-1/)
+
 ## Built With
 
 - [HTML](https://developer.mozilla.org/en-US/docs/Web/HTML) - HyperText Markup Language used for structure
